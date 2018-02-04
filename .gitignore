@@ -25,3 +25,8 @@ _testmain.go
 
 # VSCode
 .vscode/
+
+# GoLand
+.idea
+
+go-snake.log

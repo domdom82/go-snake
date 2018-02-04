@@ -3,24 +3,18 @@ package main
 import tl "github.com/JoelOtter/termloop"
 import "log"
 import "bufio"
-import "os"
+import (
+	"os"
+)
 
-const fps = 30
+const fps = 10
 
 // Termloop stuff
 var game *tl.Game
 
-// BodyPart is a part of the snake
-type BodyPart struct {
-	*tl.Entity
-	speed         float32
-	x             float32
-	y             float32
-	direction     Direction
-	nextDirection Direction
-	nextThink     int
-	head          bool
-	next          *BodyPart
+type Point struct {
+	x	int
+	y 	int
 }
 
 // Direction of movement
@@ -34,96 +28,118 @@ const (
 	RIGHT
 )
 
-// Tick for a snake body
-func (part *BodyPart) Tick(event tl.Event) {
-	// only the head can change direction
-	if part.head {
-		if event.Type == tl.EventKey { // Is it a keyboard event?
-			switch event.Key { // If so, switch on the pressed key.
-			case tl.KeyArrowRight:
-				part.direction = RIGHT
-			case tl.KeyArrowLeft:
-				part.direction = LEFT
-			case tl.KeyArrowUp:
-				part.direction = UP
-			case tl.KeyArrowDown:
-				part.direction = DOWN
-			case tl.KeySpace:
-				//TESTING
-				grow(part)
+type Snake struct {
+	*tl.Entity
+	speed	  int
+	body      []Point
+	direction Direction
+	grow	  bool
+}
+
+// Head of snake
+func (snake *Snake) head() *Point {
+	return &snake.body[len(snake.body)-1]
+}
+
+// Tick for a snake
+func (snake *Snake) Tick(event tl.Event) {
+	if event.Type == tl.EventKey { // Is it a keyboard event?
+		switch event.Key { // If so, switch on the pressed key.
+		case tl.KeyArrowRight:
+			if snake.direction != LEFT {
+				snake.direction = RIGHT
 			}
-			if part.next != nil {
-				part.next.nextDirection = part.direction
+		case tl.KeyArrowLeft:
+			if snake.direction != RIGHT {
+				snake.direction = LEFT
 			}
-			part.nextDirection = part.direction
+		case tl.KeyArrowUp:
+			if snake.direction != DOWN {
+				snake.direction = UP
+			}
+		case tl.KeyArrowDown:
+			if snake.direction != UP {
+				snake.direction = DOWN
+			}
+		case tl.KeySpace:
+			//TESTING
+			snake.grow = true
 		}
 	}
 }
 
-// Draw for a snake body part
-func (part *BodyPart) Draw(screen *tl.Screen) {
-	part.nextThink--
-	if part.nextThink <= 0 {
-		part.nextThink = 5
-		// apply my direction to child
-		if part.next != nil {
-			part.next.nextDirection = part.direction
-		}
-		// change my direction as planned
-		part.direction = part.nextDirection
-		part.speed = 5.0
-	}
+// Draw for a snake body
+func (snake *Snake) Draw(screen *tl.Screen) {
+	var head = *snake.head()
 
-	frameSpeed := part.speed / fps
-
-	switch part.direction {
+	switch snake.direction {
 	case RIGHT:
-		part.x += frameSpeed
+		head.x += snake.speed
 	case LEFT:
-		part.x -= frameSpeed
+		head.x -= snake.speed
 	case UP:
-		part.y -= frameSpeed
+		head.y -= snake.speed
 	case DOWN:
-		part.y += frameSpeed
+		head.y += snake.speed
 	}
 
-	part.SetPosition(int(part.x), int(part.y))
-	part.Entity.Draw(screen)
+	// if snake runs off screen, re-enter at the other side
+	screenWidth,screenHeight := game.Screen().Size()
+	if head.x > screenWidth {
+		head.x = 0
+	}
+	if head.x < 0 {
+		head.x = screenWidth
+	}
+	if head.y > screenHeight {
+		head.y = 0
+	}
+	if head.y < 0 {
+		head.y = screenHeight
+	}
 
-}
-
-// NewBodyPart - Make a new body part
-func NewBodyPart(x float32, y float32, speed float32, dir Direction) *BodyPart {
-	p := BodyPart{tl.NewEntity(1, 1, 1, 1), speed, x, y, dir, dir, int(speed), false, nil}
-	p.SetCell(0, 0, &tl.Cell{Fg: tl.ColorRed, Ch: '\u2B1C'})
-	return &p
-}
-
-func grow(head *BodyPart) *BodyPart {
-	var body *BodyPart
-	if head == nil {
-		// new snake
-		body = NewBodyPart(40.0, 10.0, 5.0, DOWN)
-		body.head = true
-	} else {
-		// add behind head
-		body = NewBodyPart(head.x, head.y, 0, head.direction)
-		if head.next != nil {
-			body.next = head.next
+	// handle snake-snake collision
+	for b := 0; b < len(snake.body); b++ {
+		if snake.body[b].x == head.x && snake.body[b].y == head.y {
+			gameOver(snake)
 		}
-		head.next = body
 	}
-	game.Screen().AddEntity(body)
-	return body
+
+	// handle snake growth and "movement"
+	if snake.grow {
+		snake.body = append(snake.body, head)
+		snake.grow = false
+	} else {
+		snake.body = append(snake.body[1:], head)
+	}
+
+	snake.SetPosition(head.x, head.y)
+
+	for _, b := range snake.body {
+		screen.RenderCell(b.x, b.y, &tl.Cell{
+			Fg: tl.ColorRed,
+			Ch: '\u2B1C',
+		})
+	}
 }
 
-func printSnake(head *BodyPart) {
-	log.Println(head)
-	n := head.next
-	for n != nil {
-		log.Println(n)
-		n = n.next
+func NewSnake() *Snake {
+	s := new(Snake)
+	s.Entity = tl.NewEntity(25, 10, 1, 1)
+	s.body = []Point{
+		{23, 10},
+		{24, 10},
+		{25, 10},
 	}
+
+	s.direction = RIGHT
+	s.speed = 1
+	return s
+}
+
+
+func gameOver(snake *Snake) {
+	os.Exit(0)
 }
 
 func main() {
@@ -147,8 +163,10 @@ func main() {
 	game.Screen().SetLevel(level)
 	game.Screen().SetFps(fps)
 
-	// Create snake head
-	grow(nil)
+	// Create snake
+	snake := NewSnake()
+
+	game.Screen().AddEntity(snake)
 
 	game.Start()
 }
