@@ -16,12 +16,45 @@ const fps = 10
 var game *tl.Game
 var score *Score
 
-func gameOver(snake *Snake) {
+func gameOver() {
 	//TODO do something nicer here
 	fmt.Println("Final Score:", score.score)
 	os.Exit(0)
 }
 
+func startScreen() {
+
+	e := NewTitle()
+
+	level := tl.NewBaseLevel(tl.Cell{
+		Bg: tl.ColorBlack,
+		Fg: tl.ColorWhite,
+	})
+	game.Screen().SetLevel(level)
+
+	level.AddEntity(e)
+}
+
+func gameScreen() {
+	level := tl.NewBaseLevel(tl.Cell{
+		Bg: tl.ColorBlack,
+		Fg: tl.ColorBlack,
+	})
+	game.Screen().SetLevel(level)
+
+	// Create snake
+	snake := NewSnake()
+
+	// Create food
+	food := NewFood()
+
+	// Create score
+	score = NewScore()
+
+	level.AddEntity(snake)
+	level.AddEntity(food)
+	game.Screen().AddEntity(score)
+}
 
 func main() {
 	// Set up RNG
@@ -40,25 +73,7 @@ func main() {
 
 	// Game setup
 	game = tl.NewGame()
-	level := tl.NewBaseLevel(tl.Cell{
-		Bg: tl.ColorBlack,
-		Fg: tl.ColorBlack,
-	})
-	game.Screen().SetLevel(level)
 	game.Screen().SetFps(fps)
-
-	// Create snake
-	snake := NewSnake()
-
-	// Create food
-	food := NewFood()
-
-	// Create score
-	score = NewScore()
-
-	level.AddEntity(snake)
-	level.AddEntity(food)
-	game.Screen().AddEntity(score)
-
+	startScreen()
 	game.Start()
 }
