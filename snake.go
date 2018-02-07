@@ -58,16 +58,17 @@ func (snake *Snake) Tick(event tl.Event) {
 // Draw for a snake body
 func (snake *Snake) Draw(screen *tl.Screen) {
 	var head = *snake.head()
+	w,h := snake.Size()
 
 	switch snake.direction {
 	case RIGHT:
-		head.x += snake.speed
+		head.x += w * snake.speed
 	case LEFT:
-		head.x -= snake.speed
+		head.x -= w * snake.speed
 	case UP:
-		head.y -= snake.speed
+		head.y -= h * snake.speed
 	case DOWN:
-		head.y += snake.speed
+		head.y += h * snake.speed
 	}
 
 	// if snake runs off screen, re-enter at the other side
