@@ -89,7 +89,7 @@ func (snake *Snake) Draw(screen *tl.Screen) {
 	// handle snake-snake collision
 	for b := 0; b < len(snake.body); b++ {
 		if snake.body[b].x == head.x && snake.body[b].y == head.y {
-			gameOver(snake)
+			gameOver()
 		}
 	}
 
@@ -123,7 +123,7 @@ func (snake *Snake) Collide(collision tl.Physical) {
 	switch collision.(type) {
 	case *Food:
 		f := collision.(*Food)
-		score.updateScore(f.score)
+		score.updateScore(f.score * len(snake.body))
 		snake.grow = 5
 		f.Reset()
 	}

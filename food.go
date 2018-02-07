@@ -41,7 +41,7 @@ func NewFood() *Food {
 	f.Entity = tl.NewEntity(60, 20, 1, 1)
 	f.body = Point{60, 20	}
 
-	f.score = 100
+	f.score = 10
 	return f
 }
 
