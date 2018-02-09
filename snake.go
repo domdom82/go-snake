@@ -89,7 +89,7 @@ func (snake *Snake) Draw(screen *tl.Screen) {
 	// handle snake-snake collision
 	for b := 0; b < len(snake.body); b++ {
 		if snake.body[b].x == head.x && snake.body[b].y == head.y {
-			gameOver()
+			gameOverScreen()
 		}
 	}
 

@@ -7,7 +7,6 @@ import (
 	"os"
 	"math/rand"
 	"time"
-	"fmt"
 )
 
 const fps = 10
@@ -16,22 +15,23 @@ const fps = 10
 var game *tl.Game
 var score *Score
 
-func gameOver() {
-	//TODO do something nicer here
-	fmt.Println("Final Score:", score.score)
-	os.Exit(0)
-}
-
-func startScreen() {
-
-	e := NewTitle()
-
+func gameOverScreen() {
+	e := NewGameOver()
 	level := tl.NewBaseLevel(tl.Cell{
 		Bg: tl.ColorBlack,
 		Fg: tl.ColorWhite,
 	})
 	game.Screen().SetLevel(level)
+	level.AddEntity(e)
+}
 
+func startScreen() {
+	e := NewTitle()
+	level := tl.NewBaseLevel(tl.Cell{
+		Bg: tl.ColorBlack,
+		Fg: tl.ColorWhite,
+	})
+	game.Screen().SetLevel(level)
 	level.AddEntity(e)
 }
 
