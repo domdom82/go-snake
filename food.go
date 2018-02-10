@@ -26,7 +26,7 @@ func (food *Food) Size() (int, int) {
 	return food.Entity.Size()
 }
 
-func (food *Food) Reset() {
+func (food *Food) Reset(snake *Snake) {
 	screenWidth, screenHeight := game.Screen().Size()
 
 	x := rand.Intn(screenWidth - 1) + 1
@@ -34,6 +34,13 @@ func (food *Food) Reset() {
 	food.SetPosition(x,y)
 	food.body.x = x
 	food.body.y = y
+
+	//re-roll if we are inside snake
+	for _,b := range snake.body {
+		if b.x == x && b.y == y {
+			food.Reset(snake)
+		}
+	}
 }
 
 func NewFood() *Food {

@@ -125,7 +125,7 @@ func (snake *Snake) Collide(collision tl.Physical) {
 		f := collision.(*Food)
 		score.updateScore(f.score * len(snake.body))
 		snake.grow = 5
-		f.Reset()
+		f.Reset(snake)
 	}
 }
 
